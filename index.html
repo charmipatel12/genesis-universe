@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>GENESIS — From Nothing, Everything</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --void:#05050b;
+    --deep:#0b1026;
+    --spark:#ffd27f;
+    --nebula:#8c6bff;
+    --plasma:#49e8c4;
+    --ember:#ff6b4a;
+    --star:#f5f3ed;
+    --accent: var(--spark);
+    --serif:'Fraunces', serif;
+    --sans:'Inter', sans-serif;
+    --mono:'JetBrains Mono', monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{background:var(--void);}
+  body{
+    background:var(--void);
+    color:var(--star);
+    font-family:var(--sans);
+    overflow-x:hidden;
+    cursor:default;
+  }
+  ::selection{background:rgba(255,210,127,0.3);color:#fff;}
+
+  a,button{font-family:inherit;}
+
+  /* ---------- scroll spacer ---------- */
+  #spacer{ position:relative; width:100%; }
+
+  /* ---------- fixed stage ---------- */
+  #stage{
+    position:fixed; inset:0; width:100vw; height:100vh;
+    overflow:hidden;
+  }
+  #scene{ position:absolute; inset:0; width:100%; height:100%; display:block; }
+
+  .vignette{
+    position:absolute; inset:0; pointer-events:none; z-index:2;
+    background:
+      radial-gradient(ellipse at center, rgba(0,0,0,0) 35%, rgba(0,0,0,0.55) 100%),
+      linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0) 18%, rgba(0,0,0,0) 78%, rgba(0,0,0,0.45) 100%);
+  }
+
+  .grain{
+    position:absolute; inset:-20%; pointer-events:none; z-index:3; opacity:0.05; mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    animation:grain 1.2s steps(4) infinite;
+  }
+  @keyframes grain{
+    0%{transform:translate(0,0);} 25%{transform:translate(-1%,1%);}
+    50%{transform:translate(1%,-1%);} 75%{transform:translate(-1%,-1%);} 100%{transform:translate(0,0);}
+  }
+
+  .cursor-glow{
+    position:fixed; top:0; left:0; width:280px; height:280px; z-index:4;
+    border-radius:50%; pointer-events:none; mix-blend-mode:screen; opacity:0;
+    background:radial-gradient(circle, rgba(255,210,127,0.16) 0%, rgba(255,210,127,0) 65%);
+    transform:translate(-50%,-50%);
+    transition:opacity .4s ease;
+    will-change:transform;
+  }
+  @media (hover:none), (pointer:coarse){ .cursor-glow{ display:none; } }
+
+  /* ---------- wordmark ---------- */
+  .wordmark{
+    position:fixed; top:2rem; left:2rem; z-index:20;
+    font-family:var(--mono); font-size:.72rem; letter-spacing:.32em;
+    text-transform:uppercase; color:rgba(245,243,237,.55);
+  }
+  .wordmark span{color:var(--accent); transition:color .6s ease;}
+
+  /* ---------- top progress bar (mobile) ---------- */
+  .topbar{
+    position:fixed; top:0; left:0; height:2px; z-index:21;
+    background:linear-gradient(90deg, var(--spark), var(--nebula));
+    width:0%;
+    transition:background .6s ease;
+  }
+
+  /* ---------- chapters ---------- */
+  .chapters{ position:fixed; inset:0; z-index:10; }
+  .chapter{
+    position:absolute; inset:0;
+    display:flex; align-items:center;
+    padding: 0 7vw;
+    opacity:0;
+    pointer-events:none;
+    will-change:opacity, transform;
+  }
+  .chapter.align-center{ justify-content:center; text-align:center; }
+  .chapter.align-left{ justify-content:flex-start; text-align:left; }
+  .chapter.align-right{ justify-content:flex-end; text-align:right; }
+
+  .panel{
+    max-width:560px;
+    background:rgba(255,255,255,0.035);
+    backdrop-filter:blur(22px) saturate(140%);
+    -webkit-backdrop-filter:blur(22px) saturate(140%);
+    border:1px solid rgba(255,255,255,0.09);
+    border-radius:24px;
+    padding:2.4rem 2.6rem;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.06);
+  }
+  .chapter.align-center .panel{ max-width:640px; }
+
+  .eyebrow{
+    font-family:var(--mono); font-size:.72rem; letter-spacing:.24em; text-transform:uppercase;
+    color:var(--accent); margin-bottom:1rem; display:block; transition:color .6s ease;
+  }
+  .title{
+    font-family:var(--serif); font-weight:500;
+    font-size:clamp(2rem, 4.6vw, 3.8rem); line-height:1.06;
+    color:#fbfaf6; margin-bottom:1.1rem;
+    letter-spacing:-0.01em;
+  }
+  .title em{ font-style:italic; font-weight:500; color:var(--accent); transition:color .6s ease; }
+  .body-text{
+    font-size:clamp(.95rem, 1.15vw, 1.05rem); line-height:1.7;
+    color:rgba(245,243,237,.72); max-width:36ch;
+  }
+  .chapter.align-right .body-text{ margin-left:auto; }
+  .chapter.align-center .body-text{ margin-left:auto; margin-right:auto; }
+
+  .prologue-hint{
+    position:absolute; bottom:3.2rem; left:50%; transform:translateX(-50%);
+    text-align:center; font-family:var(--mono); font-size:.68rem; letter-spacing:.3em;
+    color:rgba(245,243,237,.45); text-transform:uppercase;
+  }
+  .chev{ margin-top:.6rem; animation:bob 2s ease-in-out infinite; }
+  @keyframes bob{ 0%,100%{transform:translateY(0);} 50%{transform:translateY(8px);} }
+
+  .again-btn{
+    margin-top:1.6rem; display:inline-block;
+    font-family:var(--mono); font-size:.72rem; letter-spacing:.2em; text-transform:uppercase;
+    color:var(--void); background:var(--star); border:none; border-radius:999px;
+    padding:.85rem 1.8rem; cursor:pointer; pointer-events:auto;
+    transition:transform .25s ease, box-shadow .25s ease;
+  }
+  .again-btn:hover{ transform:translateY(-2px); box-shadow:0 10px 30px rgba(255,255,255,.15); }
+  .again-btn:focus-visible{ outline:2px solid var(--accent); outline-offset:3px; }
+
+  /* ---------- rail nav (desktop) ---------- */
+  .rail{
+    position:fixed; right:2.4rem; top:50%; transform:translateY(-50%);
+    z-index:22; display:flex; flex-direction:column; align-items:center; gap:0;
+  }
+  @media (max-width:900px){ .rail{ display:none; } }
+  .rail-track{
+    position:relative; width:1px; height:calc(var(--n) * 30px);
+    background:rgba(255,255,255,0.12);
+  }
+  .rail-fill{
+    position:absolute; top:0; left:0; width:100%; height:0%;
+    background:linear-gradient(to bottom, var(--spark), var(--nebula));
+    transition:background .8s ease;
+  }
+  .rail-dots{ position:absolute; inset:0; display:flex; flex-direction:column; justify-content:space-between; }
+  .rail-dot{
+    width:26px; height:30px; margin-left:-13px; display:flex; align-items:center; justify-content:center;
+    background:none; border:none; cursor:pointer; pointer-events:auto;
+  }
+  .rail-dot i{
+    display:block; width:6px; height:6px; border-radius:50%;
+    background:rgba(255,255,255,0.35); transition:all .35s ease;
+  }
+  .rail-dot.active i{
+    width:11px; height:11px; background:var(--accent);
+    box-shadow:0 0 14px 2px var(--accent);
+  }
+  .rail-dot:focus-visible i{ outline:2px solid var(--accent); outline-offset:3px; }
+  .rail-label{
+    position:absolute; right:26px; white-space:nowrap;
+    font-family:var(--mono); font-size:.62rem; letter-spacing:.14em; color:rgba(245,243,237,.4);
+    opacity:0; transform:translateX(6px); transition:all .3s ease; pointer-events:none;
+  }
+  .rail-dot.active .rail-label{ opacity:.85; transform:translateX(0); color:var(--star); }
+
+  @media (prefers-reduced-motion: reduce){
+    .chev{ animation:none; }
+    .grain{ animation:none; }
+  }
+</style>
+</head>
+<body>
+
+  <div id="stage">
+    <canvas id="scene"></canvas>
+    <div class="vignette"></div>
+    <div class="grain"></div>
+  </div>
+
+  <div class="cursor-glow" id="cursorGlow"></div>
+  <div class="wordmark">GENESIS<span id="wmDot">·</span></div>
+  <div class="topbar" id="topbar"></div>
+
+  <div class="chapters" id="chapters"></div>
+
+  <nav class="rail" id="rail" aria-label="Cosmic timeline navigation">
+    <div class="rail-track" id="railTrack">
+      <div class="rail-fill" id="railFill"></div>
+      <div class="rail-dots" id="railDots"></div>
+    </div>
+  </nav>
+
+  <div id="spacer"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ===================== DATA ===================== */
+  const CHAPTERS = [
+    { time:"Before Time", title:"In the beginning,\nthere was <em>no beginning</em>.", body:"No light. No space. No time to measure the dark. Only the possibility of everything, waiting.", align:"center", accent:"#8c6bff" },
+    { time:"T Minus Zero", title:"A single point\nholds <em>everything</em>.", body:"Smaller than a thought, denser than a star. All the universe that will ever be, folded into nothing.", align:"center", accent:"#ffd27f" },
+    { time:"13.8 Billion Years Ago", title:"And then —\n<em>ignition</em>.", body:"The Big Bang. Space itself unfurls faster than light, carrying matter, energy, and the first laws of physics outward.", align:"center", accent:"#ff6b4a" },
+    { time:"13.6 Billion Years Ago", title:"Gravity gathers\nthe <em>drifting dust</em>.", body:"Hydrogen clouds spiral and collapse into galaxies — hundreds of billions of them, each a city of stars.", align:"left", accent:"#8c6bff" },
+    { time:"~10 Billion Years Ago", title:"Stars ignite,\nburn, and <em>let go</em>.", body:"Nuclear fire forges carbon, oxygen, iron. When giant stars die, they scatter these elements across the dark — the raw material of everything to come.", align:"right", accent:"#f5f3ed" },
+    { time:"4.6 Billion Years Ago", title:"From the wreckage,\na <em>world</em> forms.", body:"Dust in orbit around a young sun clumps, collides, and cools into rock. A planet takes shape from the ashes of dead stars.", align:"left", accent:"#ff9d6b" },
+    { time:"~4 Billion Years Ago", title:"Water finds\nits <em>level</em>.", body:"Comets and cooling vapor fill the basins of the young Earth. Beneath calm waves, the first chemistry of life begins to stir.", align:"right", accent:"#49e8c4" },
+    { time:"~470 Million Years Ago", title:"Green reaches\ntoward the <em>light</em>.", body:"Life crawls from the water and roots itself in soil. Forests rise, breathing oxygen into the sky, one leaf at a time.", align:"left", accent:"#3ddc84" },
+    { time:"~12,000 Years Ago", title:"We gather,\nwe build, we <em>remember</em>.", body:"Fires become hearths, hearths become cities. Humanity learns to write down its thoughts so they can outlive us.", align:"right", accent:"#ffb454" },
+    { time:"2020s", title:"Our thoughts learn\nto <em>think back</em>.", body:"Networks of silicon begin to mirror the networks in our skulls. A new kind of mind takes its first uncertain steps.", align:"left", accent:"#49e8c4" },
+    { time:"Now — and beyond", title:"The universe\nwakes up to <em>itself</em>.", body:"13.8 billion years of dust learned to ask where it came from — and looked up. This is only the first scroll.", align:"center", accent:"#f5f3ed", finale:true },
+  ];
+  const N_STAGES = CHAPTERS.length;
+
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const isSmall = window.innerWidth < 820;
+  const PARTICLE_COUNT = isSmall ? 900 : 2000;
+
+  /* ===================== DOM BUILD ===================== */
+  const spacer = document.getElementById('spacer');
+  spacer.style.height = (N_STAGES * 120) + 'vh';
+
+  const chaptersRoot = document.getElementById('chapters');
+  const chapterEls = CHAPTERS.map((c, i) => {
+    const el = document.createElement('div');
+    el.className = 'chapter align-' + c.align;
+    el.style.setProperty('--accent', c.accent);
+    const titleHtml = c.title.split('\n').join('<br>');
+    el.innerHTML =
+      '<div class="panel">' +
+        '<span class="eyebrow">' + c.time + '</span>' +
+        '<h2 class="title">' + titleHtml + '</h2>' +
+        '<p class="body-text">' + c.body + '</p>' +
+        (c.finale ? '<button class="again-btn" id="againBtn">Begin again</button>' : '') +
+        (i === 0 ? '' : '') +
+      '</div>' +
+      (i === 0 ? '<div class="prologue-hint" id="prologueHint">Scroll to begin<div class="chev">↓</div></div>' : '');
+    chaptersRoot.appendChild(el);
+    return el;
+  });
+
+  const railDots = document.getElementById('railDots');
+  const railTrack = document.getElementById('railTrack');
+  railTrack.style.setProperty('--n', N_STAGES);
+  const dotEls = CHAPTERS.map((c, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'rail-dot';
+    btn.setAttribute('aria-label', 'Jump to ' + c.time);
+    btn.innerHTML = '<i></i><span class="rail-label">' + c.time + '</span>';
+    btn.addEventListener('click', () => {
+      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+      window.scrollTo({ top: (i / (N_STAGES - 1)) * maxScroll, behavior: 'smooth' });
+    });
+    railDots.appendChild(btn);
+    return btn;
+  });
+  const railFill = document.getElementById('railFill');
+
+  const againBtn = () => document.getElementById('againBtn');
+  chaptersRoot.addEventListener('click', (e) => {
+    if (e.target && e.target.id === 'againBtn') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  });
+
+  /* ===================== CANVAS SETUP ===================== */
+  const canvas = document.getElementById('scene');
+  const ctx = canvas.getContext('2d');
+  let W = window.innerWidth, H = window.innerHeight, DPR = Math.min(window.devicePixelRatio || 1, 2);
+
+  function resize(){
+    W = window.innerWidth; H = window.innerHeight;
+    DPR = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = W * DPR; canvas.height = H * DPR;
+    canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  /* ===================== HELPERS ===================== */
+  const rand = (a, b) => a + Math.random() * (b - a);
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const easeInOutCubic = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+  function mk(n, fn){
+    const arr = new Array(n);
+    for (let i = 0; i < n; i++) arr[i] = fn(i, n);
+    return arr;
+  }
+
+  /* ===================== PARTICLE STAGE GENERATORS ===================== */
+  const N = PARTICLE_COUNT;
+  const heroIndices = new Set();
+
+  function stageDark(){
+    return mk(N, () => ({ x:0, y:0, s:0, r:0, g:0, b:0, a:0 }));
+  }
+
+  function stageIgnition(){
+    return mk(N, () => {
+      const ang = rand(0, Math.PI * 2), rad = rand(0, 0.02);
+      return {
+        x: Math.cos(ang) * rad, y: Math.sin(ang) * rad,
+        s: rand(0.4, 1.1),
+        r: 255, g: rand(190, 225), b: rand(120, 170),
+        a: rand(0.15, 0.55)
+      };
+    });
+  }
+
+  function stageBigBang(){
+    return mk(N, () => {
+      const ang = rand(0, Math.PI * 2);
+      const dist = Math.pow(Math.random(), 0.55);
+      const t = dist;
+      return {
+        x: Math.cos(ang) * dist, y: Math.sin(ang) * dist,
+        s: rand(1.2, 3.2) * (1 - t * 0.35),
+        r: 255, g: lerp(255, 140, t), b: lerp(225, 70, t),
+        a: 1 - t * 0.25
+      };
+    });
+  }
+
+  function stageGalaxy(){
+    const arms = 3;
+    return mk(N, (i) => {
+      const arm = i % arms;
+      const tt = i / N;
+      const radius = Math.pow(tt, 0.5) * 0.92;
+      const angle = arm * (Math.PI * 2 / arms) + radius * 8.2 + rand(-0.16, 0.16);
+      const t = radius;
+      return {
+        x: Math.cos(angle) * radius,
+        y: Math.sin(angle) * radius * 0.5 + rand(-0.02, 0.02),
+        s: rand(0.7, 1.6) + (1 - t) * 1.6,
+        r: lerp(255, 150, t), g: lerp(238, 155, t), b: lerp(215, 255, t),
+        a: 0.85
+      };
+    });
+  }
+
+  function stageStars(){
+    return mk(N, (i) => {
+      const dist = Math.sqrt(Math.random());
+      const ang = rand(0, Math.PI * 2);
+      const big = i % 41 === 0;
+      return {
+        x: Math.cos(ang) * dist, y: Math.sin(ang) * dist * 0.92,
+        s: big ? rand(2.2, 3.6) : rand(0.5, 2.0),
+        r: rand(210, 255), g: rand(220, 255), b: 255,
+        a: rand(0.45, 0.95)
+      };
+    });
+  }
+
+  function stagePlanets(){
+    return mk(N, () => {
+      const ang = rand(0, Math.PI * 2);
+      const radius = rand(0.32, 0.96);
+      return {
+        x: Math.cos(ang) * radius, y: Math.sin(ang) * radius * 0.16,
+        s: rand(0.6, 1.7),
+        r: rand(205, 235), g: rand(140, 180), b: rand(85, 130),
+        a: rand(0.45, 0.8)
+      };
+    });
+  }
+
+  function stageOceans(){
+    const bands = 16;
+    return mk(N, (i) => {
+      const band = i % bands;
+      const t = band / bands;
+      const x = rand(-1, 1);
+      const yBase = -0.5 + band * (1.0 / bands);
+      const y = yBase + Math.sin(x * 5 + band * 1.3) * 0.045;
+      return {
+        x, y,
+        s: rand(0.6, 1.5),
+        r: lerp(15, 130, t), g: lerp(85, 215, t), b: lerp(140, 220, t),
+        a: rand(0.5, 0.82)
+      };
+    });
+  }
+
+  function stageForests(){
+    const trees = 42;
+    return mk(N, (i) => {
+      const idx = i % trees;
+      const tx = -1 + (idx + 0.5) * (2 / trees);
+      const seed = (idx * 137) % 100 / 100;
+      const treeH = 0.14 + seed * 0.22;
+      const y0 = 0.56;
+      const ang = rand(0, Math.PI * 2);
+      const rr = Math.sqrt(Math.random()) * (0.045 + treeH * 0.12);
+      return {
+        x: tx + Math.cos(ang) * rr + rand(-0.008, 0.008),
+        y: (y0 - treeH) + Math.sin(ang) * rr * 0.8,
+        s: rand(0.8, 1.9),
+        r: rand(35, 85), g: rand(150, 220), b: rand(60, 110),
+        a: rand(0.55, 0.88)
+      };
+    });
+  }
+
+  function stageCivilizations(){
+    const buildings = 28;
+    return mk(N, (i) => {
+      const b = i % buildings;
+      const bx = -1 + (b + 0.5) * (2 / buildings);
+      const seed = (b * 53) % 40 / 40;
+      const bh = 0.08 + seed * 0.42;
+      const y0 = 0.56;
+      const wT = Math.random();
+      return {
+        x: bx + rand(-0.006, 0.006),
+        y: y0 - wT * bh,
+        s: rand(0.6, 1.4),
+        r: rand(230, 255), g: rand(165, 210), b: rand(85, 150),
+        a: Math.random() < 0.12 ? 1 : rand(0.4, 0.8)
+      };
+    });
+  }
+
+  function stageAI(){
+    const layers = 5;
+    return mk(N, (i) => {
+      const layerIdx = i % layers;
+      const x = -0.78 + layerIdx * (1.56 / (layers - 1));
+      const y = rand(-0.72, 0.72);
+      const t = Math.random();
+      const isHub = i % 26 === 0;
+      if (isHub) heroIndices.add(i);
+      return {
+        x, y,
+        s: isHub ? rand(2.0, 2.8) : rand(0.8, 1.8),
+        r: lerp(140, 90, t), g: lerp(230, 120, t), b: lerp(235, 255, t),
+        a: rand(0.55, 0.95)
+      };
+    });
+  }
+
+  function stageFinale(){
+    heroIndices.clear();
+    return mk(N, (i) => {
+      const dist = Math.sqrt(Math.random());
+      const ang = rand(0, Math.PI * 2);
+      const isHero = i % 46 === 0;
+      if (isHero) heroIndices.add(i);
+      return {
+        x: Math.cos(ang) * dist, y: Math.sin(ang) * dist * 0.95,
+        s: isHero ? rand(2.4, 4.2) : rand(0.5, 1.9),
+        r: rand(220, 255), g: rand(230, 255), b: 255,
+        a: rand(0.5, 1)
+      };
+    });
+  }
+
+  const STAGE_ARRAYS = [
+    stageDark(),          // 0 prologue
+    stageIgnition(),       // 1 ignition
+    stageBigBang(),        // 2 big bang
+    stageGalaxy(),         // 3 galaxies
+    stageStars(),          // 4 stars/supernova
+    stagePlanets(),        // 5 planets
+    stageOceans(),         // 6 oceans
+    stageForests(),        // 7 forests
+    stageCivilizations(),  // 8 civilizations
+    stageAI(),             // 9 AI
+    stageFinale()          // 10 cosmos
+  ];
+
+  const aiHeroIdx = [...heroIndices].filter(() => true); // captured across stageAI + stageFinale calls; recompute below cleanly
+  // Recompute hero sets precisely per stage (since the Set above got reused/cleared across calls)
+  const AI_HEROES = [];
+  const FINALE_HEROES = [];
+  STAGE_ARRAYS[9].forEach((p, i) => { if (p.s > 1.9) AI_HEROES.push(i); });
+  STAGE_ARRAYS[10].forEach((p, i) => { if (p.s > 2.3) FINALE_HEROES.push(i); });
+
+  /* ===================== SCROLL / PROGRESS ===================== */
+  let targetProgress = 0;
+  let progress = 0;
+
+  function computeTarget(){
+    const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+    const p = clamp(window.scrollY / Math.max(1, maxScroll), 0, 1);
+    targetProgress = p * (N_STAGES - 1);
+  }
+  window.addEventListener('scroll', computeTarget, { passive: true });
+  computeTarget();
+
+  /* ===================== MOUSE / PARALLAX ===================== */
+  let mouseX = W / 2, mouseY = H / 2, mouseActive = false;
+  const cursorGlow = document.getElementById('cursorGlow');
+  window.addEventListener('mousemove', (e) => {
+    mouseX = e.clientX; mouseY = e.clientY; mouseActive = true;
+    cursorGlow.style.opacity = '1';
+    cursorGlow.style.transform = `translate(${mouseX}px, ${mouseY}px) translate(-50%,-50%)`;
+  });
+  window.addEventListener('mouseleave', () => { cursorGlow.style.opacity = '0'; });
+
+  let parX = 0, parY = 0;
+
+  /* ===================== CHAPTER / RAIL UPDATE ===================== */
+  const wmDot = document.getElementById('wmDot');
+
+  function updateChapters(p){
+    for (let i = 0; i < N_STAGES; i++){
+      const d = Math.abs(p - i);
+      const opacity = clamp(1 - d * 1.7, 0, 1);
+      const el = chapterEls[i];
+      el.style.opacity = opacity;
+      el.style.pointerEvents = opacity > 0.6 ? 'auto' : 'none';
+      const drift = (p - i) * 46;
+      el.style.transform = `translateY(${drift}px)`;
+    }
+    const hint = document.getElementById('prologueHint');
+    if (hint) hint.style.opacity = clamp(1 - p * 6, 0, 1);
+  }
+
+  function updateRail(p){
+    const pct = (p / (N_STAGES - 1)) * 100;
+    railFill.style.height = pct + '%';
+    const active = Math.round(p);
+    dotEls.forEach((d, i) => d.classList.toggle('active', i === active));
+    const accent = CHAPTERS[clamp(active, 0, N_STAGES - 1)].accent;
+    document.documentElement.style.setProperty('--accent', accent);
+    wmDot.style.color = accent;
+    railFill.style.background = `linear-gradient(to bottom, ${accent}, var(--nebula))`;
+    document.getElementById('topbar').style.width = pct + '%';
+    document.getElementById('topbar').style.background = `linear-gradient(90deg, ${accent}, var(--nebula))`;
+  }
+
+  /* ===================== DRAW ===================== */
+  function drawHero(stageIdx, t, et, cx, cy, scale, now){
+    // Ignition core glow (stage 1)
+    if (stageIdx === 1){
+      const r = (4 + et * 60) * (scale / (Math.min(W, H) / 2));
+      const grd = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+      grd.addColorStop(0, `rgba(255,245,220,${0.9})`);
+      grd.addColorStop(0.4, `rgba(255,210,127,${0.5})`);
+      grd.addColorStop(1, 'rgba(255,210,127,0)');
+      ctx.fillStyle = grd;
+      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+    }
+    // Big bang flash
+    if (stageIdx === 2 && t < 0.22){
+      const flash = clamp(1 - t / 0.22, 0, 1);
+      ctx.fillStyle = `rgba(255,250,235,${flash * 0.55})`;
+      ctx.fillRect(0, 0, W, H);
+    }
+    // Supernova ring (stage 4)
+    if (stageIdx === 4 && et > 0.12 && et < 0.9){
+      const rp = (et - 0.12) / 0.78;
+      const r = rp * scale * 0.95;
+      const alpha = (1 - rp) * 0.7;
+      ctx.strokeStyle = `rgba(255,205,150,${alpha})`;
+      ctx.lineWidth = 1.5 + (1 - rp) * 3;
+      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
+    }
+    // Coalescing planet sphere (stage 5)
+    if (stageIdx === 5){
+      const r = (10 + et * 46) * (scale / (Math.min(W, H) / 2));
+      const grd = ctx.createRadialGradient(cx - r * 0.3, cy - r * 0.3, r * 0.08, cx, cy, r);
+      grd.addColorStop(0, 'rgba(255,220,190,0.95)');
+      grd.addColorStop(0.5, 'rgba(220,150,100,0.9)');
+      grd.addColorStop(1, 'rgba(80,45,35,0.85)');
+      ctx.fillStyle = grd;
+      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+    }
+    // Ocean horizon glow (stage 6)
+    if (stageIdx === 6){
+      const grd = ctx.createLinearGradient(0, cy - scale * 0.1, 0, cy + scale * 0.3);
+      grd.addColorStop(0, 'rgba(73,232,196,0.08)');
+      grd.addColorStop(1, 'rgba(10,40,70,0)');
+      ctx.fillStyle = grd;
+      ctx.fillRect(0, cy - scale * 0.1, W, scale * 0.4);
+    }
+    // Forest sunset horizon (stage 7)
+    if (stageIdx === 7){
+      const grd = ctx.createLinearGradient(0, cy + scale * 0.5, 0, cy + scale * 0.62);
+      grd.addColorStop(0, 'rgba(255,170,90,0.12)');
+      grd.addColorStop(1, 'rgba(255,170,90,0)');
+      ctx.fillStyle = grd;
+      ctx.fillRect(0, cy + scale * 0.4, W, scale * 0.3);
+    }
+    // City glow (stage 8)
+    if (stageIdx === 8){
+      const grd = ctx.createLinearGradient(0, cy + scale * 0.5, 0, cy + scale * 0.62);
+      grd.addColorStop(0, 'rgba(255,180,84,0.14)');
+      grd.addColorStop(1, 'rgba(255,180,84,0)');
+      ctx.fillStyle = grd;
+      ctx.fillRect(0, cy + scale * 0.4, W, scale * 0.3);
+    }
+    // AI neural links (stage 9)
+    if (stageIdx === 9 && AI_HEROES.length){
+      const arr = STAGE_ARRAYS[9];
+      const nextArr = STAGE_ARRAYS[10];
+      const pts = AI_HEROES.map((i) => {
+        const A = arr[i], B = nextArr[i];
+        return {
+          x: cx + lerp(A.x, B.x, et) * scale,
+          y: cy + lerp(A.y, B.y, et) * scale
+        };
+      });
+      ctx.lineWidth = 1;
+      for (let a = 0; a < pts.length; a++){
+        for (let b = a + 1; b < pts.length; b++){
+          const dx = pts[a].x - pts[b].x, dy = pts[a].y - pts[b].y;
+          const d = Math.sqrt(dx * dx + dy * dy);
+          if (d < scale * 0.42){
+            const pulse = reduceMotion ? 0.5 : (0.4 + 0.3 * Math.sin(now / 700 + a * 0.7));
+            const alpha = clamp((1 - d / (scale * 0.42)) * pulse * 0.5, 0, 0.4);
+            ctx.strokeStyle = `rgba(120,220,235,${alpha})`;
+            ctx.beginPath(); ctx.moveTo(pts[a].x, pts[a].y); ctx.lineTo(pts[b].x, pts[b].y); ctx.stroke();
+          }
+        }
+      }
+    }
+    // Finale constellation lines near cursor (stage 10)
+    if (stageIdx === 10 && FINALE_HEROES.length && mouseActive){
+      const arr = STAGE_ARRAYS[9];
+      const nextArr = STAGE_ARRAYS[10];
+      const pts = FINALE_HEROES.map((i) => {
+        const A = arr[i], B = nextArr[i];
+        return {
+          x: cx + lerp(A.x, B.x, et) * scale,
+          y: cy + lerp(A.y, B.y, et) * scale
+        };
+      }).map(p => ({ p, d: Math.hypot(p.x - mouseX, p.y - mouseY) }))
+        .filter(o => o.d < 260)
+        .sort((a, b) => a.d - b.d)
+        .slice(0, 6);
+      ctx.lineWidth = 1;
+      for (let a = 0; a < pts.length; a++){
+        for (let b = a + 1; b < pts.length; b++){
+          const dx = pts[a].p.x - pts[b].p.x, dy = pts[a].p.y - pts[b].p.y;
+          const d = Math.sqrt(dx * dx + dy * dy);
+          if (d < 220){
+            const alpha = clamp((1 - d / 220) * 0.5, 0, 0.4);
+            ctx.strokeStyle = `rgba(245,243,237,${alpha})`;
+            ctx.beginPath(); ctx.moveTo(pts[a].p.x, pts[a].p.y); ctx.lineTo(pts[b].p.x, pts[b].p.y); ctx.stroke();
+          }
+        }
+      }
+    }
+  }
+
+  function frame(now){
+    requestAnimationFrame(frame);
+
+    progress += (targetProgress - progress) * (reduceMotion ? 1 : 0.075);
+    if (Math.abs(targetProgress - progress) < 0.0005) progress = targetProgress;
+
+    const p = progress;
+    const stageIdx = clamp(Math.floor(p), 0, N_STAGES - 2);
+    const t = clamp(p - stageIdx, 0, 1);
+    const et = easeInOutCubic(t);
+
+    updateChapters(p);
+    updateRail(p);
+
+    // clear
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#05050b';
+    ctx.fillRect(0, 0, W, H);
+
+    const cx = W / 2, cy = H / 2;
+    const scale = Math.min(W, H) / 2 * 0.95;
+
+    // subtle camera drift + parallax
+    if (!reduceMotion){
+      parX += ((mouseX - cx) * 0.01 - parX) * 0.03;
+      parY += ((mouseY - cy) * 0.01 - parY) * 0.03;
+    }
+    const rot = reduceMotion ? 0 : Math.sin(p * 0.28) * 0.025;
+    const zoom = 1 + (reduceMotion ? 0 : p * 0.012);
+
+    ctx.save();
+    ctx.translate(cx + parX, cy + parY);
+    ctx.rotate(rot);
+    ctx.scale(zoom, zoom);
+    ctx.translate(-cx, -cy);
+
+    ctx.globalCompositeOperation = 'lighter';
+    const A = STAGE_ARRAYS[stageIdx], B = STAGE_ARRAYS[stageIdx + 1];
+    for (let i = 0; i < N; i++){
+      const a0 = A[i], b0 = B[i];
+      const alpha = lerp(a0.a, b0.a, et);
+      if (alpha <= 0.01) continue;
+      const x = cx + lerp(a0.x, b0.x, et) * scale;
+      const y = cy + lerp(a0.y, b0.y, et) * scale;
+      const s = lerp(a0.s, b0.s, et);
+      const r = lerp(a0.r, b0.r, et) | 0;
+      const g = lerp(a0.g, b0.g, et) | 0;
+      const bl = lerp(a0.b, b0.b, et) | 0;
+      ctx.fillStyle = `rgba(${r},${g},${bl},${alpha})`;
+      ctx.beginPath();
+      ctx.arc(x, y, Math.max(0.3, s), 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalCompositeOperation = 'source-over';
+
+    drawHero(stageIdx, t, et, cx, cy, scale, now);
+
+    ctx.restore();
+  }
+  requestAnimationFrame(frame);
+
+})();
+</script>
+</body>
+</html>
