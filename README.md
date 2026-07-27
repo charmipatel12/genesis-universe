@@ -2,8 +2,6 @@
 
 > An immersive cinematic web experience that visualizes the story of the universe—from absolute nothingness to the rise of artificial intelligence—through scroll-driven animations and real-time particle simulations.
 
-![GENESIS Preview](preview.png)
-
 ## ✨ Overview
 
 GENESIS is an experimental interactive website built entirely with **HTML5 Canvas**, **CSS**, and **Vanilla JavaScript**.
